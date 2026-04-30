@@ -74,3 +74,8 @@ def get_info_from_project(path: str, data: dict[str, list|dict] | None = None) -
                             if len(i) > 0:
                                 data["data"].append(json.loads(i))
     return data
+
+def json_serial(obj):
+    if isinstance(obj, bytes):
+        return obj.decode('utf-8', errors='ignore') # Convert bytes to string
+    raise TypeError(f"Type {type(obj)} not serializable")
