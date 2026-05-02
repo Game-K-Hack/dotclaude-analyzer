@@ -16,7 +16,7 @@ class WelcomePage(QWizardPage):
         title_font = QFont()
         title_font.setBold(True)
         title_font.setPixelSize(17)
-        title = QLabel("Bienvenue dans Inspecteur Claude")
+        title = QLabel("Bienvenue dans DotClaude Analyzer")
         title.setFont(title_font)
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)

@@ -1,7 +1,5 @@
-import os
 from datetime import datetime
-from PyQt5.QtWidgets import (QComboBox, QWizardPage, QHBoxLayout, QVBoxLayout, QListWidget,
-                             QListWidgetItem, QTextEdit, QLabel, QSplitter, QWidget)
+from PyQt5.QtWidgets import QComboBox, QWizardPage, QVBoxLayout, QTextEdit, QLabel, QSplitter, QWidget, QCheckBox
 from PyQt5.QtCore import Qt
 from service import config
 from service import scanner
@@ -31,6 +29,9 @@ class ProjectPage(QWizardPage):
         self.sess_list = QComboBox()
         self.sess_list.currentTextChanged.connect(self._on_session_selected)
         ml.addWidget(self.sess_list)
+        self.all_sess = QCheckBox("Selectionner toutes les conversations du projet (export complet)")
+        self.all_sess.toggled.connect(self._on_all_toggled)
+        ml.addWidget(self.all_sess)
 
         btm = QWidget()
         bl = QVBoxLayout(btm)
@@ -57,6 +58,7 @@ class ProjectPage(QWizardPage):
     def _on_project_selected(self):
         self.sess_list.clear()
         self.conv.clear()
+        self.all_sess.setChecked(False)
         if self.proj_list.currentIndex() < 0:
             return
         proj = self.proj_list.currentData(Qt.ItemDataRole.UserRole)
@@ -69,6 +71,8 @@ class ProjectPage(QWizardPage):
         self.completeChanged.emit()
 
     def _on_session_selected(self):
+        if self.all_sess.isChecked():
+            return
         if self.sess_list.currentIndex() < 0:
             return
         sess = self.sess_list.currentData(Qt.ItemDataRole.UserRole)
@@ -79,6 +83,42 @@ class ProjectPage(QWizardPage):
         sess["messages"] = msgs
         sess["file_events"] = files
         self._render_conversation(msgs)
+        self.completeChanged.emit()
+
+    def _on_all_toggled(self, checked):
+        self.sess_list.setEnabled(not checked)
+        if not checked:
+            self._on_session_selected()
+            return
+        proj = config.selected_project
+        if not proj:
+            return
+        all_msgs, all_files = [], []
+        sessions_sorted = sorted(proj["sessions"], key=lambda x: x["modified"])
+        for s in sessions_sorted:
+            if not s.get("jsonl"):
+                continue
+            msgs, files = scanner.parse_session(s["jsonl"])
+            s["messages"] = msgs
+            s["file_events"] = files
+            header = {
+                "role": "assistant",
+                "text": f"━━━━━━━━━━ Session `{s['id'][:8]}` ({datetime.fromtimestamp(s['modified']).strftime('%Y-%m-%d %H:%M')}) ━━━━━━━━━━",
+                "timestamp": "",
+            }
+            all_msgs.append(header)
+            all_msgs.extend(msgs)
+            all_files.extend(files)
+        all_files.sort(key=lambda e: e.get("timestamp") or "")
+        config.selected_session = {
+            "id": f"ALL-{proj['name']}",
+            "jsonl": None,
+            "messages": all_msgs,
+            "file_events": all_files,
+            "modified": max((s["modified"] for s in proj["sessions"]), default=0),
+            "all_sessions": True,
+        }
+        self._render_conversation(all_msgs)
         self.completeChanged.emit()
 
     def _render_conversation(self, msgs):
