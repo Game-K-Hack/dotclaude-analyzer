@@ -55,12 +55,13 @@ class ProjectPage(QWizardPage):
             self.proj_list.addItem(label, p)
 
     def _on_project_selected(self):
-        items = self.proj_list.currentIndex()
         self.sess_list.clear()
         self.conv.clear()
-        if not items:
+        if self.proj_list.currentIndex() < 0:
             return
         proj = self.proj_list.currentData(Qt.ItemDataRole.UserRole)
+        if proj is None:
+            return
         config.selected_project = proj
         for s in sorted(proj["sessions"], key=lambda x: x["modified"], reverse=True):
             label = f"{datetime.fromtimestamp(s['modified']).strftime('%Y-%m-%d %H:%M')}  -  {s['id'][:8]}"
@@ -68,10 +69,11 @@ class ProjectPage(QWizardPage):
         self.completeChanged.emit()
 
     def _on_session_selected(self):
-        items = self.sess_list.currentIndex()
-        if not items:
+        if self.sess_list.currentIndex() < 0:
             return
         sess = self.sess_list.currentData(Qt.ItemDataRole.UserRole)
+        if sess is None or not sess.get("jsonl"):
+            return
         config.selected_session = sess
         msgs, files = scanner.parse_session(sess["jsonl"])
         sess["messages"] = msgs
