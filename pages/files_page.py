@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from PyQt5.QtWidgets import (QWizardPage, QVBoxLayout, QHBoxLayout, QLabel,
                              QSlider, QListWidget, QListWidgetItem, QPushButton,
-                             QFileDialog, QMessageBox, QComboBox)
+                             QFileDialog, QMessageBox, QComboBox, QCheckBox)
 from PyQt5.QtCore import Qt
 from service import config
 from service import reconstructor, exporter
@@ -48,6 +48,13 @@ class FilesPage(QWizardPage):
         self.export_btn.clicked.connect(self._export)
         btns.addWidget(self.export_btn)
         layout.addLayout(btns)
+
+        self.include_modified_cb = QCheckBox("Inclure les fichiers seulement modifies (copie du disque)")
+        self.include_modified_cb.setToolTip(
+            "Pour les fichiers dont le contenu ne peut pas etre reconstitue,\n"
+            "copie la version actuelle presente sur le disque."
+        )
+        layout.addWidget(self.include_modified_cb, alignment=Qt.AlignmentFlag.AlignRight)
 
         self.setLayout(layout)
 
@@ -103,16 +110,17 @@ class FilesPage(QWizardPage):
             QMessageBox.warning(self, "Export", "Aucun fichier a exporter.")
             return
         fmt = self.format_combo.currentText()
+        include_mod = self.include_modified_cb.isChecked()
         if fmt == "Dossier":
             d = QFileDialog.getExistingDirectory(self, "Choisir le dossier de destination")
             if not d:
                 return
-            written, skipped = exporter.export_to_folder(self._current_state, d)
+            written, skipped = exporter.export_to_folder(self._current_state, d, include_modified_only=include_mod)
         else:
             f, _ = QFileDialog.getSaveFileName(self, "Enregistrer l'archive", "export-claude.zip", "Archive ZIP (*.zip)")
             if not f:
                 return
-            written, skipped = exporter.export_to_zip(self._current_state, f)
+            written, skipped = exporter.export_to_zip(self._current_state, f, include_modified_only=include_mod)
         msg = f"{len(written)} fichier(s) exporte(s)."
         if skipped:
             msg += f"\n{len(skipped)} fichier(s) ignore(s) (contenu non reconstituable)."
