@@ -161,7 +161,7 @@ for project in projects:
                 case "ai-title":
                     claude[project][sid]["title"] = data["aiTitle"]
                 case "assistant":
-                    claude[project][sid][uuid] = data
+                    claude[project][sid][data["uuid"]] = data
                 case "last-prompt":
                     pass
 
@@ -249,6 +249,6 @@ def exportJSON(projects: str = None) -> None:
 
 
 
-# print(claude.keys())
+print(claude.keys())
 # export("d--Bureau-claria")
-exportJSON()
+# exportJSON()
