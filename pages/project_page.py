@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from PyQt5.QtWidgets import (QWizardPage, QHBoxLayout, QVBoxLayout, QListWidget,
+from PyQt5.QtWidgets import (QComboBox, QWizardPage, QHBoxLayout, QVBoxLayout, QListWidget,
                              QListWidgetItem, QTextEdit, QLabel, QSplitter, QWidget)
 from PyQt5.QtCore import Qt
 from service import config
@@ -14,62 +14,64 @@ class ProjectPage(QWizardPage):
         self.setSubTitle("Selectionnez un projet puis une session pour visualiser la conversation")
 
         root = QVBoxLayout()
-        splitter = QSplitter(Qt.Orientation.Horizontal)
+        splitter = QSplitter(Qt.Orientation.Vertical)
 
-        # Colonne gauche : projets
-        left = QWidget(); ll = QVBoxLayout(left)
-        ll.setContentsMargins(0, 0, 0, 0)
-        ll.addWidget(QLabel("Projets"))
-        self.proj_list = QListWidget()
-        self.proj_list.itemSelectionChanged.connect(self._on_project_selected)
-        ll.addWidget(self.proj_list)
+        top = QWidget()
+        tl = QVBoxLayout(top)
+        tl.setContentsMargins(0, 0, 0, 0)
+        tl.addWidget(QLabel("Projets"))
+        self.proj_list = QComboBox()
+        self.proj_list.currentTextChanged.connect(self._on_project_selected)
+        tl.addWidget(self.proj_list)
 
-        # Colonne milieu : sessions
-        mid = QWidget(); ml = QVBoxLayout(mid); ml.setContentsMargins(0, 0, 0, 0)
+        mid = QWidget()
+        ml = QVBoxLayout(mid)
+        ml.setContentsMargins(0, 0, 0, 0)
         ml.addWidget(QLabel("Sessions"))
-        self.sess_list = QListWidget()
-        self.sess_list.itemSelectionChanged.connect(self._on_session_selected)
+        self.sess_list = QComboBox()
+        self.sess_list.currentTextChanged.connect(self._on_session_selected)
         ml.addWidget(self.sess_list)
 
-        # Colonne droite : conversation
-        right = QWidget(); rl = QVBoxLayout(right); rl.setContentsMargins(0, 0, 0, 0)
-        rl.addWidget(QLabel("Conversation"))
-        self.conv = QTextEdit(); self.conv.setReadOnly(True)
+        btm = QWidget()
+        bl = QVBoxLayout(btm)
+        bl.setContentsMargins(0, 0, 0, 0)
+        bl.addWidget(QLabel("Conversation"))
+        self.conv = QTextEdit()
+        self.conv.setReadOnly(True)
         self.conv.setStyleSheet("QTextEdit { background:white; font-size:11px; }")
-        rl.addWidget(self.conv)
+        bl.addWidget(self.conv)
 
-        splitter.addWidget(left); splitter.addWidget(mid); splitter.addWidget(right)
-        splitter.setSizes([140, 180, 380])
+        splitter.addWidget(top)
+        splitter.addWidget(mid)
+        splitter.addWidget(btm)
+        splitter.setSizes([10, 10, 300])
         root.addWidget(splitter)
         self.setLayout(root)
 
     def initializePage(self):
         self.proj_list.clear()
         for p in config.projects:
-            it = QListWidgetItem(f"{p['name']}  ({len(p['sessions'])})")
-            it.setData(Qt.ItemDataRole.UserRole, p)
-            self.proj_list.addItem(it)
+            label = f"{p['name']} ({len(p['sessions'])})"
+            self.proj_list.addItem(label, p)
 
     def _on_project_selected(self):
-        items = self.proj_list.selectedItems()
+        items = self.proj_list.currentIndex()
         self.sess_list.clear()
         self.conv.clear()
         if not items:
             return
-        proj = items[0].data(Qt.ItemDataRole.UserRole)
+        proj = self.proj_list.currentData(Qt.ItemDataRole.UserRole)
         config.selected_project = proj
         for s in sorted(proj["sessions"], key=lambda x: x["modified"], reverse=True):
             label = f"{datetime.fromtimestamp(s['modified']).strftime('%Y-%m-%d %H:%M')}  -  {s['id'][:8]}"
-            it = QListWidgetItem(label)
-            it.setData(Qt.ItemDataRole.UserRole, s)
-            self.sess_list.addItem(it)
+            self.sess_list.addItem(label, s)
         self.completeChanged.emit()
 
     def _on_session_selected(self):
-        items = self.sess_list.selectedItems()
+        items = self.sess_list.currentIndex()
         if not items:
             return
-        sess = items[0].data(Qt.ItemDataRole.UserRole)
+        sess = self.sess_list.currentData(Qt.ItemDataRole.UserRole)
         config.selected_session = sess
         msgs, files = scanner.parse_session(sess["jsonl"])
         sess["messages"] = msgs
