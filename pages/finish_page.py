@@ -1,13 +1,15 @@
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import QWizardPage, QVBoxLayout, QLabel, QWizard
-from PyQt5.QtGui import QFont
-from pages.welcome_page import _make_watermark
+from PyQt5.QtGui import QFont, QPixmap
 
 
 class FinishPage(QWizardPage):
     def __init__(self):
         super().__init__()
-        self.setPixmap(QWizard.WizardPixmap.WatermarkPixmap, _make_watermark())
+        
+        watermark = QPixmap("assets/banner.png")
+        watermark = watermark.scaledToHeight(402)
+        self.setPixmap(QWizard.WizardPixmap.WatermarkPixmap, watermark)
 
         layout = QVBoxLayout()
         title_font = QFont(); title_font.setBold(True); title_font.setPixelSize(17)

@@ -1,19 +1,15 @@
 from PyQt5.QtWidgets import QWizard, QWizardPage, QVBoxLayout, QLabel
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QPixmap, QColor
-
-
-def _make_watermark(width=180, height=410):
-    """Pixmap dégradé bleu utilise comme watermark si aucun asset n'est fourni."""
-    pm = QPixmap(width, height)
-    pm.fill(QColor("#0078d4"))
-    return pm
+from PyQt5.QtGui import QFont, QPixmap
 
 
 class WelcomePage(QWizardPage):
     def __init__(self):
         super().__init__()
-        self.setPixmap(QWizard.WizardPixmap.WatermarkPixmap, _make_watermark())
+        
+        watermark = QPixmap("assets/banner.png")
+        watermark = watermark.scaledToHeight(402)
+        self.setPixmap(QWizard.WizardPixmap.WatermarkPixmap, watermark)
 
         layout = QVBoxLayout()
 
