@@ -82,18 +82,15 @@ class ProjectPage(QWizardPage):
         self.completeChanged.emit()
 
     def _render_conversation(self, msgs):
-        html = ["<style>"
-                ".u{background:#eef5ff;border-left:3px solid #0078d4;padding:6px;margin:4px 0;}"
-                ".a{background:#f6f6f6;border-left:3px solid #888;padding:6px;margin:4px 0;}"
-                ".t{color:#888;font-size:9px;}"
-                "</style>"]
+        parts = []
         for m in msgs[:300]:
-            cls = "u" if m["role"] == "user" else "a"
-            txt = (m["text"] or "").replace("&", "&amp;").replace("<", "&lt;").replace("\n", "<br>")
-            html.append(f"<div class='{cls}'><span class='t'>{m['timestamp'] or ''} &middot; {m['role']}</span><br>{txt}</div>")
+            role = m["role"]
+            icon = "🧑" if role == "user" else "🤖"
+            ts = m["timestamp"] or ""
+            parts.append(f"### {icon} {role} — `{ts}`\n\n{m['text'] or ''}\n\n---\n")
         if len(msgs) > 300:
-            html.append(f"<p><i>... {len(msgs)-300} messages supplementaires</i></p>")
-        self.conv.setHtml("".join(html))
+            parts.append(f"\n*... {len(msgs)-300} messages supplementaires*\n")
+        self.conv.setMarkdown("\n".join(parts))
 
     def isComplete(self):
         return config.selected_session is not None
