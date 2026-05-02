@@ -57,11 +57,12 @@ def credentials_summary(claude_dir):
         def walk(o, prefix=""):
             if isinstance(o, dict):
                 for k, v in o.items():
-                    keys.append(prefix + k)
                     if isinstance(v, (dict, list)):
                         walk(v, prefix + k + ".")
+                    else:
+                        keys.append({prefix + k: v})
         walk(data)
-        info["fields"] = keys[:30]
+        info["fields"] = keys
         # Tente d'extraire une expiration si presente
         def find_expiry(o):
             if isinstance(o, dict):

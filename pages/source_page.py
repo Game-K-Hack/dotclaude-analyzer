@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import (QWizardPage, QVBoxLayout, QHBoxLayout, QLineEdit,
                              QPushButton, QFileDialog, QTextEdit, QCheckBox, QLabel)
 from service import config
 from service import scanner
+from service.log_format import format_log, should_log
 
 
 class SourcePage(QWizardPage):
@@ -61,15 +62,15 @@ class SourcePage(QWizardPage):
         config.claude_dir = text
         config.claude_dir_valid = scanner.is_valid_claude_dir(text)
         self.log.clear()
-        self._log(f"Chemin choisi : <b>{text or '(vide)'}</b>")
+        self._log(f"Chemin choisi : <b>{text or '(vide)'}</b>", "debug")
         if not text:
             self.completeChanged.emit(); return
         if not os.path.isdir(text):
-            self._log("<span style='color:#C93030;'>Dossier introuvable.</span>")
+            self._log("Dossier introuvable.", "error")
         elif not config.claude_dir_valid:
-            self._log("<span style='color:#C93030;'>Sous-dossier 'projects/' absent : ce n'est pas un .claude valide.</span>")
+            self._log("Sous-dossier 'projects/' absent : ce n'est pas un .claude valide.", "error")
         else:
-            self._log("<span style='color:#50B450;'>Dossier .claude valide.</span>")
+            self._log("Dossier .claude valide.", "ok")
             projects = scanner.list_projects(text)
             self._log(f"Projets detectes : <b>{len(projects)}</b>")
             sessions = sum(len(p['sessions']) for p in projects)
@@ -79,8 +80,11 @@ class SourcePage(QWizardPage):
             config.credentials_info = scanner.credentials_summary(text)
         self.completeChanged.emit()
 
-    def _log(self, html):
-        self.log.append(html)
+    def _log(self, msg: str, level: str = "info"):
+        # Filtrage par niveau (configurable via service.log_format.log_level).
+        if not should_log(level):
+            return
+        self.log.append(format_log(level, msg, only_text=False))
 
     def isComplete(self):
         return bool(config.claude_dir_valid)

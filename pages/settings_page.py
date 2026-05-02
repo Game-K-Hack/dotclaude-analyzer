@@ -1,6 +1,7 @@
 import json
 from PyQt5.QtWidgets import QWizardPage, QVBoxLayout, QLabel, QTextEdit, QTabWidget, QWidget
 from service import config
+from service.log_format import format_log
 
 
 class SettingsPage(QWizardPage):
@@ -12,9 +13,23 @@ class SettingsPage(QWizardPage):
         layout = QVBoxLayout()
         self.tabs = QTabWidget()
 
-        self.tab_settings = QTextEdit(); self.tab_settings.setReadOnly(True)
-        self.tab_local = QTextEdit(); self.tab_local.setReadOnly(True)
-        self.tab_creds = QTextEdit(); self.tab_creds.setReadOnly(True)
+        self.tab_settings = QTextEdit()
+        self.tab_settings.setReadOnly(True)
+        self.tab_settings.setStyleSheet(
+            "QTextEdit { background:white; border:1px solid #999; "
+            "font-family: Consolas, monospace; font-size: 11px; }")
+
+        self.tab_local = QTextEdit()
+        self.tab_local.setReadOnly(True)
+        self.tab_settings.setStyleSheet(
+            "QTextEdit { background:white; border:1px solid #999; "
+            "font-family: Consolas, monospace; font-size: 11px; }")
+
+        self.tab_creds = QTextEdit()
+        self.tab_creds.setReadOnly(True)
+        self.tab_creds.setStyleSheet(
+            "QTextEdit { background:white; border:1px solid #999; "
+            "font-family: Consolas, monospace; font-size: 11px; }")
 
         for w in (self.tab_settings, self.tab_local, self.tab_creds):
             w.setStyleSheet("QTextEdit { background:white; font-family: Consolas, monospace; font-size:11px; }")
@@ -29,27 +44,26 @@ class SettingsPage(QWizardPage):
 
     def initializePage(self):
         s = config.settings or {}
-        self.tab_settings.setPlainText(self._dump(s.get("settings", {})))
-        self.tab_local.setPlainText(self._dump(s.get("settings_local", {})))
+        self.tab_settings.setText(self._dump(s.get("settings", {})))
+        self.tab_local.setText(self._dump(s.get("settings_local", {})))
         info = config.credentials_info or {}
         if not info.get("present"):
-            self.tab_creds.setPlainText("Aucun fichier .credentials.json trouve.")
+            self.tab_creds.setText("Aucun fichier .credentials.json trouve.")
         else:
-            lines = [
-                f"Fichier present : oui",
-                f"Taille          : {info.get('size')} octets",
-                f"Modifie le      : {info.get('modified')}",
-            ]
+            self.tab_creds.setText(f"Fichier present : oui")
+            self.tab_creds.append(f"Taille          : {info.get('size')} octets")
+            self.tab_creds.append(f"Modifie le      : {info.get('modified')}")
             if "expiry" in info:
-                lines.append(f"Expiration      : {info['expiry']}")
+                self.tab_creds.append(f"Expiration      : {info['expiry']}")
             if info.get("fields"):
-                lines.append("")
-                lines.append("Champs detectes (cles uniquement, valeurs masquees) :")
-                for k in info["fields"]:
-                    lines.append(f"  - {k}")
+                self.tab_creds.append("")
+                self.tab_creds.append("Champs detectes :")
+                for elm in info["fields"]:
+                    key = list(elm.keys())[0]
+                    value = elm[key]
+                    self.tab_creds.append(f"  - <b>{key}</b>: {value}")
             if info.get("error"):
-                lines.append(f"Erreur de lecture : {info['error']}")
-            self.tab_creds.setPlainText("\n".join(lines))
+                self.tab_creds.append(f"Erreur de lecture : {info['error']}")
 
     @staticmethod
     def _dump(o):

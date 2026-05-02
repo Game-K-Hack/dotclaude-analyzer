@@ -13,6 +13,7 @@ from pages.finish_page import FinishPage
 class MainWizard(QWizard):
     def __init__(self):
         super().__init__()
+        # self.setWindowIcon(QIcon('assets/icon.ico'))
         self.setWindowTitle("DotClaude Analyzer")
         self.setWindowFlags(
             Qt.WindowType.Window
@@ -20,7 +21,7 @@ class MainWizard(QWizard):
             | Qt.WindowType.WindowCloseButtonHint
         )
         self.setWizardStyle(QWizard.WizardStyle.ModernStyle)
-        self.setMinimumSize(780, 540)
+        self.setFixedSize(600, 450)
 
         self.addPage(WelcomePage())
         self.addPage(SourcePage())
