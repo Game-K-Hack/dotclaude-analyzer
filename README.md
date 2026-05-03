@@ -1,43 +1,65 @@
-# Inspecteur Claude
+![banner](./documentation/images/banner.png)
 
-Interface graphique (style assistant / wizard, inspiree de `bkcrack-gui-master`)
-pour inspecter le dossier `.claude` de Claude Code et exporter le contenu d'un
-projet a une date donnee.
+<p align="center">
+  <a href="https://github.com/Game-K-Hack/dotclaude-analyzer/releases/latest"><img src="https://img.shields.io/github/v/release/Game-K-Hack/dotclaude-analyzer?label=Download&style=for-the-badge&logo=windows" alt="Download"></a>
+</p>
 
-## Lancement
+[:fr: Français](./documentation/README.fr.md) | 
+**:uk: English** | 
+[:kr: 한국어](./documentation/README.ko.md) | 
+[:jp: 日本語](./documentation/README.ja.md) | 
+[:cn: 中文](./documentation/README.zh.md) | 
+[:it: Italiano](./documentation/README.it.md) | 
+[:es: Español](./documentation/README.es.md) | 
+[:ru: Русский](./documentation/README.ru.md) | 
+[:de: Deutsch](./documentation/README.de.md)
+
+### DotClaude Analyzer
+
+**DotClaude Analyzer** is a graphical application that explores your `.claude` folder to help you better understand and leverage your activity with Claude Code.
+
+The assistant allows you to:
+
+- inspect your settings and connection;
+- browse your projects and reread all of their conversations;
+- list every file created or modified by Claude;
+- export a full version of a project at a given date.
+
+---
+
+### Installation
 
 ```
+git clone https://github.com/Game-K-Hack/dotclaude-analyzer.git
 pip install -r requirements.txt
+```
+
+#### Launching the graphical interface
+
+```
 python main.py
 ```
 
-## Pages
+#### Building the EXE
 
-1. **Bienvenue** : presentation de l'outil.
-2. **Source** : detection automatique du dossier `.claude` ou choix manuel.
-   Le diagnostic affiche le nombre de projets et de sessions trouves.
-3. **Parametres / Connexion** : aper&ccedil;u de `settings.json`,
-   `settings.local.json` et resume non-sensible de `.credentials.json`
-   (taille, date de modification, expiration eventuelle, liste des cles
-   sans afficher les valeurs sensibles).
-4. **Projets** : liste des projets, des sessions, et rendu de la
-   conversation (messages utilisateur / assistant).
-5. **Fichiers** : liste des fichiers crees / modifies dans la session
-   selectionnee, avec une **barre de date** permettant de remonter
-   le temps. Bouton d'**export** vers un dossier ou une archive ZIP.
-6. **Fin** : ecran de cloture.
+```
+pyinstaller --noconfirm build.spec
+```
 
-## Reconstruction des fichiers
+---
 
-A partir des evenements `tool_use` du fichier `.jsonl` de la session :
+### Demo
 
-- `Write` : la version complete est connue, on l'utilise telle quelle.
-- `Edit` / `MultiEdit` : applique sequentiellement les patches
-  `old_string` -> `new_string` sur la base courante. Si la base n'est
-  pas connue (premier evenement etait un Edit), on tente de lire le
-  fichier sur le disque ; sinon il est marque "[Edits seulement]" et
-  ignore a l'export.
-- `NotebookEdit` : note mais non reconstruit.
+![screenshot-1](./documentation/images/welcome.png)
 
-L'export remappe les chemins absolus en chemins relatifs portables
-(suppression de la lettre de lecteur Windows).
+Select a `.claude` folder located in the `User` folder
+
+![screenshot-2](./documentation/images/source.png)
+
+Select a project to retrieve (you can reread its conversations)
+
+![screenshot-3](./documentation/images/conv.png)
+
+Select the version of the files to export
+
+![screenshot-4](./documentation/images/files.png)
