@@ -32,9 +32,9 @@ jobs:
         run: pyinstaller --noconfirm build.spec
 
       - name: Rename exe
-        run: Move-Item dist/DotClaudeAnalyzer.exe DotClaudeAnalyzer-${{ github.event.release.tag_name }}-win64.exe
+        run: Move-Item dist/DotClaude-Analyzer.exe DotClaude-Analyzer-${{ github.event.release.tag_name }}-win64.exe
 
       - name: Upload asset to release
         uses: softprops/action-gh-release@v2
         with:
-          files: DotClaudeAnalyzer-${{ github.event.release.tag_name }}-win64.exe
+          files: DotClaude-Analyzer-${{ github.event.release.tag_name }}-win64.exe
