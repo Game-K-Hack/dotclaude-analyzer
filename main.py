@@ -1,9 +1,11 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWizard
+import webbrowser
+from PyQt5.QtWidgets import QApplication, QWizard, QMessageBox
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
 from service.resources import resource_path
+from service.updater import UpdateChecker, RELEASES_PAGE_URL
 from pages.welcome_page import WelcomePage
 from pages.source_page import SourcePage
 from pages.settings_page import SettingsPage
@@ -24,6 +26,10 @@ class MainWizard(QWizard):
         )
         self.setWizardStyle(QWizard.WizardStyle.ModernStyle)
         self.setFixedSize(600, 450)
+
+        self._update_checker = UpdateChecker(self)
+        self._update_checker.update_available.connect(self._on_update_available)
+        self._update_checker.start()
 
         self.addPage(WelcomePage())
         self.addPage(SourcePage())
@@ -63,6 +69,22 @@ class MainWizard(QWizard):
                 background: #0078d4; width: 14px; margin: -5px 0; border-radius: 7px;
             }
         """)
+
+
+    def _on_update_available(self, current: str, latest: str):
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Information)
+        box.setWindowTitle("Mise a jour disponible")
+        box.setText(
+            f"Une nouvelle version est disponible.\n\n"
+            f"Version actuelle : {current}\n"
+            f"Derniere version : {latest}"
+        )
+        open_btn = box.addButton("Telecharger", QMessageBox.ButtonRole.AcceptRole)
+        box.addButton("Plus tard", QMessageBox.ButtonRole.RejectRole)
+        box.exec_()
+        if box.clickedButton() is open_btn:
+            webbrowser.open(RELEASES_PAGE_URL)
 
 
 def main():
