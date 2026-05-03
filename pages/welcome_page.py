@@ -2,12 +2,14 @@ from PyQt5.QtWidgets import QWizard, QWizardPage, QVBoxLayout, QLabel
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QPixmap
 
+from service.resources import resource_path
+
 
 class WelcomePage(QWizardPage):
     def __init__(self):
         super().__init__()
-        
-        watermark = QPixmap("assets/banner.png")
+
+        watermark = QPixmap(resource_path("assets/banner.png"))
         watermark = watermark.scaledToHeight(402)
         self.setPixmap(QWizard.WizardPixmap.WatermarkPixmap, watermark)
 

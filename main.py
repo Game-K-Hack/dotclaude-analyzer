@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QApplication, QWizard
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 
+from service.resources import resource_path
 from pages.welcome_page import WelcomePage
 from pages.source_page import SourcePage
 from pages.settings_page import SettingsPage
@@ -14,7 +15,7 @@ from pages.finish_page import FinishPage
 class MainWizard(QWizard):
     def __init__(self):
         super().__init__()
-        self.setWindowIcon(QIcon('assets/logo.ico'))
+        self.setWindowIcon(QIcon(resource_path('assets/logo.ico')))
         self.setWindowTitle("DotClaude Analyzer")
         self.setWindowFlags(
             Qt.WindowType.Window
