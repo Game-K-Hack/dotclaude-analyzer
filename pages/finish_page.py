@@ -3,6 +3,8 @@ from PyQt5.QtWidgets import QWizardPage, QVBoxLayout, QLabel, QWizard
 from PyQt5.QtGui import QFont, QPixmap
 
 from service.resources import resource_path
+from service import i18n
+from service.i18n import tr
 
 
 class FinishPage(QWizardPage):
@@ -15,23 +17,25 @@ class FinishPage(QWizardPage):
 
         layout = QVBoxLayout()
         title_font = QFont(); title_font.setBold(True); title_font.setPixelSize(17)
-        title = QLabel("Inspection terminee")
-        title.setFont(title_font)
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(title)
+        self.title_label = QLabel()
+        self.title_label.setFont(title_font)
+        self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.title_label)
 
-        body = QLabel(
-            "Merci d'avoir utilise Inspecteur Claude.\n\n"
-            "Vous pouvez relancer l'assistant a tout moment pour explorer\n"
-            "d'autres projets ou exporter d'autres versions.\n\n"
-            "Cliquez sur 'Terminer' pour quitter."
-        )
-        body.setWordWrap(True)
-        body.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        body.setStyleSheet("padding: 10px;")
-        layout.addWidget(body)
+        self.body_label = QLabel()
+        self.body_label.setWordWrap(True)
+        self.body_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.body_label.setStyleSheet("padding: 10px;")
+        layout.addWidget(self.body_label)
         layout.addStretch()
         self.setLayout(layout)
+
+        self._retranslate()
+        i18n.signaler.language_changed.connect(self._retranslate)
+
+    def _retranslate(self, *_):
+        self.title_label.setText(tr("finish.title"))
+        self.body_label.setText(tr("finish.body"))
 
     def initializePage(self):
         QTimer.singleShot(0, self._tweak_buttons)

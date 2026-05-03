@@ -6,6 +6,8 @@ from PyQt5.QtGui import QIcon
 
 from service.resources import resource_path
 from service.updater import UpdateChecker, RELEASES_PAGE_URL
+from service import i18n
+from service.i18n import tr
 from pages.welcome_page import WelcomePage
 from pages.source_page import SourcePage
 from pages.settings_page import SettingsPage
@@ -38,10 +40,8 @@ class MainWizard(QWizard):
         self.addPage(FilesPage())
         self.addPage(FinishPage())
 
-        self.setButtonText(QWizard.WizardButton.BackButton, "< Precedent")
-        self.setButtonText(QWizard.WizardButton.NextButton, "Suivant >")
-        self.setButtonText(QWizard.WizardButton.FinishButton, "Terminer")
-        self.setButtonText(QWizard.WizardButton.CancelButton, "Annuler")
+        self._retranslate_buttons()
+        i18n.signaler.language_changed.connect(self._retranslate_buttons)
 
         self.setStyleSheet("""
             QWizard { background-color: #f5f5f5; }
@@ -70,18 +70,19 @@ class MainWizard(QWizard):
             }
         """)
 
+    def _retranslate_buttons(self, *_):
+        self.setButtonText(QWizard.WizardButton.BackButton, tr("wizard.back"))
+        self.setButtonText(QWizard.WizardButton.NextButton, tr("wizard.next"))
+        self.setButtonText(QWizard.WizardButton.FinishButton, tr("wizard.finish"))
+        self.setButtonText(QWizard.WizardButton.CancelButton, tr("wizard.cancel"))
 
     def _on_update_available(self, current: str, latest: str):
         box = QMessageBox(self)
         box.setIcon(QMessageBox.Icon.Information)
-        box.setWindowTitle("Mise a jour disponible")
-        box.setText(
-            f"Une nouvelle version est disponible.\n\n"
-            f"Version actuelle : {current}\n"
-            f"Derniere version : {latest}"
-        )
-        open_btn = box.addButton("Telecharger", QMessageBox.ButtonRole.AcceptRole)
-        box.addButton("Plus tard", QMessageBox.ButtonRole.RejectRole)
+        box.setWindowTitle(tr("update.title"))
+        box.setText(tr("update.text", current=current, latest=latest))
+        open_btn = box.addButton(tr("update.download"), QMessageBox.ButtonRole.AcceptRole)
+        box.addButton(tr("update.later"), QMessageBox.ButtonRole.RejectRole)
         box.exec_()
         if box.clickedButton() is open_btn:
             webbrowser.open(RELEASES_PAGE_URL)
@@ -93,6 +94,7 @@ def main():
         app.setStyle("WindowsVista")
     except Exception:
         pass
+    i18n.set_language(i18n.detect_system_language())
     w = MainWizard()
     w.show()
     sys.exit(app.exec_())

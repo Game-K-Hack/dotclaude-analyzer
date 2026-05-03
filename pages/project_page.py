@@ -3,13 +3,13 @@ from PyQt5.QtWidgets import QComboBox, QWizardPage, QVBoxLayout, QTextEdit, QLab
 from PyQt5.QtCore import Qt
 from service import config
 from service import scanner
+from service import i18n
+from service.i18n import tr
 
 
 class ProjectPage(QWizardPage):
     def __init__(self):
         super().__init__()
-        self.setTitle("Projets et conversation")
-        self.setSubTitle("Selectionnez un projet puis une session pour visualiser la conversation")
 
         root = QVBoxLayout()
         splitter = QSplitter(Qt.Orientation.Vertical)
@@ -17,7 +17,8 @@ class ProjectPage(QWizardPage):
         top = QWidget()
         tl = QVBoxLayout(top)
         tl.setContentsMargins(0, 0, 0, 0)
-        tl.addWidget(QLabel("Projets"))
+        self.lbl_projects = QLabel()
+        tl.addWidget(self.lbl_projects)
         self.proj_list = QComboBox()
         self.proj_list.currentTextChanged.connect(self._on_project_selected)
         tl.addWidget(self.proj_list)
@@ -25,18 +26,20 @@ class ProjectPage(QWizardPage):
         mid = QWidget()
         ml = QVBoxLayout(mid)
         ml.setContentsMargins(0, 0, 0, 0)
-        ml.addWidget(QLabel("Sessions"))
+        self.lbl_sessions = QLabel()
+        ml.addWidget(self.lbl_sessions)
         self.sess_list = QComboBox()
         self.sess_list.currentTextChanged.connect(self._on_session_selected)
         ml.addWidget(self.sess_list)
-        self.all_sess = QCheckBox("Selectionner toutes les conversations du projet (export complet)")
+        self.all_sess = QCheckBox()
         self.all_sess.toggled.connect(self._on_all_toggled)
         ml.addWidget(self.all_sess)
 
         btm = QWidget()
         bl = QVBoxLayout(btm)
         bl.setContentsMargins(0, 0, 0, 0)
-        bl.addWidget(QLabel("Conversation"))
+        self.lbl_conv = QLabel()
+        bl.addWidget(self.lbl_conv)
         self.conv = QTextEdit()
         self.conv.setReadOnly(True)
         self.conv.setStyleSheet("QTextEdit { background:white; font-size:11px; }")
@@ -48,6 +51,20 @@ class ProjectPage(QWizardPage):
         splitter.setSizes([10, 10, 300])
         root.addWidget(splitter)
         self.setLayout(root)
+
+        self._last_msgs = []
+        self._retranslate()
+        i18n.signaler.language_changed.connect(self._retranslate)
+
+    def _retranslate(self, *_):
+        self.setTitle(tr("project.title"))
+        self.setSubTitle(tr("project.subtitle"))
+        self.lbl_projects.setText(tr("project.label_projects"))
+        self.lbl_sessions.setText(tr("project.label_sessions"))
+        self.lbl_conv.setText(tr("project.label_conversation"))
+        self.all_sess.setText(tr("project.all_sessions"))
+        if self._last_msgs:
+            self._render_conversation(self._last_msgs)
 
     def initializePage(self):
         self.proj_list.clear()
@@ -103,7 +120,11 @@ class ProjectPage(QWizardPage):
             s["file_events"] = files
             header = {
                 "role": "assistant",
-                "text": f"━━━━━━━━━━ Session `{s['id'][:8]}` ({datetime.fromtimestamp(s['modified']).strftime('%Y-%m-%d %H:%M')}) ━━━━━━━━━━",
+                "text": tr(
+                    "project.session_header",
+                    id=s["id"][:8],
+                    date=datetime.fromtimestamp(s["modified"]).strftime("%Y-%m-%d %H:%M"),
+                ),
                 "timestamp": "",
             }
             all_msgs.append(header)
@@ -122,6 +143,7 @@ class ProjectPage(QWizardPage):
         self.completeChanged.emit()
 
     def _render_conversation(self, msgs):
+        self._last_msgs = msgs
         parts = []
         for m in msgs[:300]:
             role = m["role"]
@@ -129,7 +151,7 @@ class ProjectPage(QWizardPage):
             ts = m["timestamp"] or ""
             parts.append(f"### {icon} {role} — `{ts}`\n\n{m['text'] or ''}\n\n---\n")
         if len(msgs) > 300:
-            parts.append(f"\n*... {len(msgs)-300} messages supplementaires*\n")
+            parts.append(tr("project.more_messages", count=len(msgs) - 300))
         self.conv.setMarkdown("\n".join(parts))
 
     def isComplete(self):
